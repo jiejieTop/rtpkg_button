@@ -94,7 +94,8 @@ void Button_Attach(Button_t *btn,Button_Event btn_event,Button_CallBack btn_call
   if(BUTTON_ALL_RIGGER == btn_event)
   {
     for(rt_uint8_t i = 0 ; i < number_of_event-1 ; i++)
-      btn->CallBack_Function[i] = btn_callback;   //A callback function triggered by a button event ,Used to handle button events 
+      /*A callback function triggered by a button event ,Used to handle button events */
+      btn->CallBack_Function[i] = btn_callback;   
   }
   else
   {
@@ -144,7 +145,8 @@ void Get_Button_EventInfo(Button_t *btn)
   {
     if(btn->CallBack_Function[i] != 0)
     {
-      RT_DEBUG_LOG(RT_DEBUG_THREAD,("Button_Event:%d",i));//print
+      /* print */
+      RT_DEBUG_LOG(RT_DEBUG_THREAD,("Button_Event:%d",i));
     }      
   } 
 }
@@ -179,7 +181,7 @@ rt_uint8_t Get_Button_State(Button_t *btn)
 
 /************************************************************
   * @brief   button cycle processing function
-  * @param   btn:处理的按键
+  * @param   btn:button structure
   * @return  RT_NULL
   * @author  jiejie
   * @github  https://github.com/jiejieTop
@@ -189,14 +191,19 @@ rt_uint8_t Get_Button_State(Button_t *btn)
   ***********************************************************/
 void Button_Cycle_Process(Button_t *btn)
 {
-  rt_uint8_t current_level = (rt_uint8_t)btn->Read_Button_Level();  //Get the current button level
+  /* Get the current button level */
+  rt_uint8_t current_level = (rt_uint8_t)btn->Read_Button_Level();
   
-  if((current_level != btn->Button_Last_Level)&&(++(btn->Debounce_Time) >= BUTTON_DEBOUNCE_TIME))   //Button level changes, debounce
+  /* Button level changes, debounce */
+  if((current_level != btn->Button_Last_Level)&&(++(btn->Debounce_Time) >= BUTTON_DEBOUNCE_TIME))
   {
-      btn->Button_Last_Level = current_level; //Update current button level
-      btn->Debounce_Time = 0;                 //button is pressed
+      /* Update current button level */
+      btn->Button_Last_Level = current_level;
+
+      /* button is pressed */
+      btn->Debounce_Time = 0;
       
-      //If the button is not pressed, change the button state to press (first press / double trigger)
+      /* If the button is not pressed, change the button state to press (first press / double trigger) */
       if((btn->Button_State == NONE_TRIGGER)||(btn->Button_State == BUTTON_DOUBLE))
       {
         btn->Button_State = BUTTON_DOWM;
@@ -211,25 +218,29 @@ void Button_Cycle_Process(Button_t *btn)
   
   switch(btn->Button_State)
   {
-    case BUTTON_DOWM :                                        // button dowm 
+    /* button dowm */
+    case BUTTON_DOWM :                                        
     {
       if(btn->Button_Last_Level == btn->Button_Trigger_Level) 
       {
-        #ifdef CONTINUOS_TRIGGER                              //Support continuous triggering
+        /* Support continuous triggering */
+        #ifdef CONTINUOS_TRIGGER                              
 
         if(++(btn->Button_Cycle) >= BUTTON_CONTINUOS_CYCLE)
         {
           btn->Button_Cycle = 0;
           btn->Button_Trigger_Event = BUTTON_CONTINUOS; 
-          TRIGGER_CB(BUTTON_CONTINUOS);                      //continuous triggering
+          /* continuous triggering */
+          TRIGGER_CB(BUTTON_CONTINUOS);                      
           RT_DEBUG_LOG(RT_DEBUG_THREAD,("continuous triggering"));
         }
         
         #else
         
         btn->Button_Trigger_Event = BUTTON_DOWM;
-      
-        if(++(btn->Long_Time) >= BUTTON_LONG_TIME)            //Update the trigger event before releasing the button as long press
+        
+        /* Update the trigger event before releasing the button as long press */
+        if(++(btn->Long_Time) >= BUTTON_LONG_TIME)            
         {
           #ifdef LONG_FREE_TRIGGER
           
@@ -237,15 +248,19 @@ void Button_Cycle_Process(Button_t *btn)
           
           #else
           
-          if(++(btn->Button_Cycle) >= BUTTON_LONG_CYCLE)      //Continuous triggering of long press cycles
+          /* Continuous triggering of long press cycles */
+          if(++(btn->Button_Cycle) >= BUTTON_LONG_CYCLE)      
           {
             btn->Button_Cycle = 0;
             btn->Button_Trigger_Event = BUTTON_LONG; 
-            TRIGGER_CB(BUTTON_LONG);    //long triggering
+            
+            /* long triggering */
+            TRIGGER_CB(BUTTON_LONG);    
           }
           #endif
           
-          if(btn->Long_Time == 0xFF)    //Update time overflow
+          /* Update time overflow */
+          if(btn->Long_Time == 0xFF)
           {
             btn->Long_Time = BUTTON_LONG_TIME;
           }
@@ -258,11 +273,14 @@ void Button_Cycle_Process(Button_t *btn)
       break;
     } 
     
-    case BUTTON_UP :                                        //button up
-    {
-      if(btn->Button_Trigger_Event == BUTTON_DOWM)          //Trigger click
+    /* button up */
+    case BUTTON_UP :
+    {]
+      /* Trigger click */
+      if(btn->Button_Trigger_Event == BUTTON_DOWM)          
       {
-        if((btn->Timer_Count <= BUTTON_DOUBLE_TIME)&&(btn->Button_Last_State == BUTTON_DOUBLE)) // double click
+        /* double click */
+        if((btn->Timer_Count <= BUTTON_DOUBLE_TIME)&&(btn->Button_Last_State == BUTTON_DOUBLE)) 
         {
           btn->Button_Trigger_Event = BUTTON_DOUBLE;
           TRIGGER_CB(BUTTON_DOUBLE);    
@@ -273,10 +291,13 @@ void Button_Cycle_Process(Button_t *btn)
         else
         {
             btn->Timer_Count=0;
-            btn->Long_Time = 0;                   //Detection long press failed, clear 0
+            /* Detection long press failed, clear 0 */
+            btn->Long_Time = 0;
           
           #ifndef SINGLE_AND_DOUBLE_TRIGGER
-            TRIGGER_CB(BUTTON_DOWM);              //click
+
+             /* click */
+            TRIGGER_CB(BUTTON_DOWM);
           #endif
             btn->Button_State = BUTTON_DOUBLE;
             btn->Button_Last_State = BUTTON_DOUBLE;
@@ -287,9 +308,12 @@ void Button_Cycle_Process(Button_t *btn)
       else if(btn->Button_Trigger_Event == BUTTON_LONG)
       {
         #ifdef LONG_FREE_TRIGGER
-          TRIGGER_CB(BUTTON_LONG);                    //Long press
+          /* Long press */
+          TRIGGER_CB(BUTTON_LONG);
         #else
-          TRIGGER_CB(BUTTON_LONG_FREE);               //Long press free
+          
+          /* Long press free */
+          TRIGGER_CB(BUTTON_LONG_FREE);
         #endif
         btn->Long_Time = 0;
         btn->Button_State = NONE_TRIGGER;
@@ -297,10 +321,12 @@ void Button_Cycle_Process(Button_t *btn)
       } 
       
       #ifdef CONTINUOS_TRIGGER
-        else if(btn->Button_Trigger_Event == BUTTON_CONTINUOS)  //Press continuously
+        /* Press continuously */
+        else if(btn->Button_Trigger_Event == BUTTON_CONTINUOS)  
         {
           btn->Long_Time = 0;
-          TRIGGER_CB(BUTTON_CONTINUOS_FREE);                    //Press continuously free
+           /* Press continuously free */
+          TRIGGER_CB(BUTTON_CONTINUOS_FREE);
           btn->Button_State = NONE_TRIGGER;
           btn->Button_Last_State = BUTTON_CONTINUOS;
         } 
@@ -311,7 +337,8 @@ void Button_Cycle_Process(Button_t *btn)
     
     case BUTTON_DOUBLE :
     {
-      btn->Timer_Count++;                                       //Update time 
+      /* Update time */
+      btn->Timer_Count++;                                      
       if(btn->Timer_Count>=BUTTON_DOUBLE_TIME)
       {
         btn->Button_State = NONE_TRIGGER;
