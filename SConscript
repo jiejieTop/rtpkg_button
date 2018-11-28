@@ -3,7 +3,7 @@ Import('rtconfig')
 from building import *
 
 cwd     = GetCurrentDir()
-src     = Glob('*.c') 
+src     = Glob('butto.c') 
 
 CPPPATH = [cwd]
 
