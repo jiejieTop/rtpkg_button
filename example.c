@@ -119,7 +119,7 @@ int main(void)
 
 /**
   ******************************************************************
-  * @brief   BSP_Init，用于所有板级初始化
+  * @brief   BSP_Init
   * @author  jiejie
   * @version V1.0
   * @date    2018-xx-xx
