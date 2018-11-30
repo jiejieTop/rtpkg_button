@@ -275,7 +275,7 @@ void Button_Cycle_Process(Button_t *btn)
     
     /* button up */
     case BUTTON_UP :
-    {]
+    {
       /* Trigger click */
       if(btn->Button_Trigger_Event == BUTTON_DOWM)          
       {
