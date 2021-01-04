@@ -64,6 +64,7 @@ void Button_Create(const char *name,
   btn->Button_Trigger_Level = btn_trigger_level;        //Button trigger level
   btn->Button_Last_Level = btn->Read_Button_Level();    //Button current level
   btn->Debounce_Time = 0;
+  btn->Long_Flag = 0;
   
   RT_DEBUG_LOG(RT_DEBUG_THREAD,("button create success!"));
   
@@ -256,6 +257,7 @@ void Button_Cycle_Process(Button_t *btn)
             
             /* long triggering */
             TRIGGER_CB(BUTTON_LONG);    
+            btn->Long_Flag = 1;
           }
           #endif
           
@@ -277,6 +279,21 @@ void Button_Cycle_Process(Button_t *btn)
     case BUTTON_UP :
     {
       /* Trigger click */
+      if(btn->Long_Flag)
+      {
+        btn->Long_Flag = 0;
+        #ifdef LONG_FREE_TRIGGER
+          /* Long press */
+          TRIGGER_CB(BUTTON_LONG);
+        #else
+          
+          /* Long press free */
+          TRIGGER_CB(BUTTON_LONG_FREE);
+        #endif
+        btn->Long_Time = 0;
+        btn->Button_State = NONE_TRIGGER;
+        btn->Button_Last_State = BUTTON_LONG;
+      }
       if(btn->Button_Trigger_Event == BUTTON_DOWM)          
       {
         /* double click */
@@ -304,21 +321,6 @@ void Button_Cycle_Process(Button_t *btn)
           
         }
       }
-      
-      else if(btn->Button_Trigger_Event == BUTTON_LONG)
-      {
-        #ifdef LONG_FREE_TRIGGER
-          /* Long press */
-          TRIGGER_CB(BUTTON_LONG);
-        #else
-          
-          /* Long press free */
-          TRIGGER_CB(BUTTON_LONG_FREE);
-        #endif
-        btn->Long_Time = 0;
-        btn->Button_State = NONE_TRIGGER;
-        btn->Button_Last_State = BUTTON_LONG;
-      } 
       
       #ifdef CONTINUOS_TRIGGER
         /* Press continuously */

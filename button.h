@@ -99,6 +99,8 @@ typedef struct button
   rt_uint8_t Debounce_Time;                      /* Debounce time */
   
   rt_uint8_t Long_Time;                          /* Button press duration */
+
+  rt_uint8_t Long_Flag;                          /* Button press LongFlag */
   
   struct button *Next;
   
